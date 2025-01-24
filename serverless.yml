@@ -8,9 +8,18 @@ provider:
   runtime: nodejs20.x
   architecture: arm64
   region: us-east-1
+  stage: ${opt:stage, 'dev'}
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     CONNECTIONS_TABLE: !Ref ConnectionsTable
+    WEBSOCKET_API_URL: !Join
+      - ''
+      - - 'https://'
+        - !Ref WebsocketsApi
+        - '.execute-api.'
+        - ${self:provider.region}
+        - '.amazonaws.com/'
+        - ${self:provider.stage}
   iam:
     role:
       statements:
@@ -40,6 +49,11 @@ functions:
           route: $connect
       - websocket:
           route: $disconnect
+  wsSendMessage:
+    handler: src/functions/wsSendMessage.handler
+    events:
+      - websocket:
+          route: sendMessage
 
 resources:
   Resources:

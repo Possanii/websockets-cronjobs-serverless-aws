@@ -1,4 +1,4 @@
 export const env = {
   CONNECTIONS_TABLE: process.env.CONNECTIONS_TABLE,
-  API_GW_ENDPOINT: process.env.API_GW_ENDPOINT,
+  WEBSOCKET_API_URL: process.env.WEBSOCKET_API_URL,
 };

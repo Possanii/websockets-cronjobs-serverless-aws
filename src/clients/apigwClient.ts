@@ -2,5 +2,5 @@ import { ApiGatewayManagementApiClient } from '@aws-sdk/client-apigatewaymanagem
 import { env } from '../config/env';
 
 export const apigwClient = new ApiGatewayManagementApiClient({
-  endpoint: env.API_GW_ENDPOINT,
+  endpoint: env.WEBSOCKET_API_URL,
 });
