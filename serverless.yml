@@ -9,6 +9,17 @@ provider:
   architecture: arm64
   region: us-east-1
   websocketsApiRouteSelectionExpression: $request.body.action
+  environment:
+    CONNECTIONS_TABLE: !Ref ConnectionsTable
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+          Resource: !GetAtt ConnectionsTable.Arn
 
 package:
   individually: true
@@ -22,12 +33,24 @@ build:
       - '@aws-sdk/*'
 
 functions:
-  wsconnect:
+  wsConnection:
     handler: src/functions/wsConnection.handler
     events:
       - websocket:
           route: $connect
       - websocket:
           route: $disconnect
-      - websocket:
-          route: sendMessage
+
+resources:
+  Resources:
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ConnectionsTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
