@@ -54,6 +54,11 @@ functions:
     events:
       - websocket:
           route: sendMessage
+  wsGarbageCollector:
+    handler: src/functions/wsGarbageCollector.handler
+    events:
+      - eventBridge:
+        schedule: rate(1 minute)
 
 resources:
   Resources:
