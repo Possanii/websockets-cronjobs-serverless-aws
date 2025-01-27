@@ -2,43 +2,19 @@ import { Loader2, SendIcon } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { useEffect, useRef, useState } from 'react';
+import { useWebsockets } from './hooks/useWebsockets';
 
 export function App() {
   const [messages, setMessages] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const ws = useRef<WebSocket | null>(null);
-
-  useEffect(() => {
-    const websocket = new WebSocket(
-      'wss:zlhmtsr6s0.execute-api.us-east-1.amazonaws.com/dev'
-    );
-
-    ws.current = websocket;
-
-    function handleNewMessage(event: MessageEvent<string>) {
-      const { message } = JSON.parse(event.data);
-
-      setMessages((prevMessages) => prevMessages.concat(message));
-    }
-
-    function handleOpen() {
-      setIsLoading(false);
-    }
-
-    websocket.addEventListener('message', handleNewMessage);
-
-    websocket.addEventListener('open', handleOpen);
-
-    return () => {
-      websocket.removeEventListener('message', handleNewMessage);
-      websocket.removeEventListener('open', handleOpen);
-      websocket.close();
-      ws.current = null;
-    };
-  }, []);
+  const { websocket, isLoading, sendMessage } = useWebsockets({
+    url: 'wss://zlhmtsr6s0.execute-api.us-east-1.amazonaws.com/dev',
+    onMessage: (payload: Record<string, any>) => {
+      setMessages((prev) => prev.concat(payload.message));
+    },
+  });
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -47,12 +23,12 @@ export function App() {
     lastMessage?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  function sendMessage(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!ws.current) return;
+    if (!websocket.current) return;
 
-    ws.current.send(JSON.stringify({ action: 'sendMessage', message }));
+    sendMessage({ action: 'sendMessage', message });
 
     setMessage('');
   }
@@ -78,7 +54,7 @@ export function App() {
               ))}
             </div>
 
-            <form className="flex items-center gap-4" onSubmit={sendMessage}>
+            <form className="flex items-center gap-4" onSubmit={handleSubmit}>
               <Input
                 placeholder="Type your message..."
                 value={message}
